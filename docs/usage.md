@@ -1,197 +1,199 @@
-# DexRipper 详细使用指南
+English | [简体中文](usage.zh-CN.md)
 
-## 快速开始
+# DexRipper Usage Guide
 
-### 1. Android App 方式（最简单）
+## Quick Start
 
-#### 安装
+### 1. Android App (Easiest)
+
+#### Install
 ```bash
 adb install dexripper.apk
 ```
 
-#### 使用步骤
-1. 打开 DexRipper App
-2. 首次使用会弹出 root 授权弹窗，点击"允许"
-3. 如果没有弹窗，手动到 root 管理器（KernelSU/SukiSU/Magisk）中授权
-4. 在应用列表中找到目标应用（支持搜索）
-5. 点击应用卡片开始脱壳
-6. 等待扫描完成（通常 10-30 秒）
-7. 点击绿色"导出全部产物"按钮
-8. 产物保存在 `/sdcard/Download/dexripper_<package>_<timestamp>/`
+#### Steps
+1. Open the DexRipper app
+2. On first use, a root authorization popup appears — tap "Allow"
+3. If no popup shows up, manually grant permission in your root manager (KernelSU/SukiSU/Magisk)
+4. Find the target app in the list (search supported)
+5. Tap the app card to start unpacking
+6. Wait for the scan to finish (usually 10-30 seconds)
+7. Tap the green "Export" button
+8. DEX files are saved to `/sdcard/Download/dexripper_<package>_<timestamp>/`
 
-#### 界面说明
+#### UI Overview
 
-**列表页**：
+**List page**:
 ```
 DexRipper
-共 40 个第三方应用
-① 目标应用需已安装并可启动
-② 首次使用需授予 root 权限（弹窗允许或手动授权）
-③ 点击应用卡片开始脱壳
-🔍 搜索应用名或包名
-[应用卡片列表]
+40 third-party apps
+① Target app must be installed and able to launch
+② Grant root permission on first use (popup allow, or manual grant)
+③ Tap an app card to start unpacking
+🔍 Search app name or package
+[App card list]
 ```
 
-**详情页**：
+**Detail page**:
 ```
-扫描中: <应用名>
-[扫描进度]
-完成: <package> — N 个 DEX, M 有效
-④ 点击绿色按钮导出产物到 /sdcard/Download
-[📦 导出全部产物]
-[DEX 文件列表 + 校验结果]
-[‹ 返回应用列表]
+Scanning: <app name>
+[scan progress]
+Done: <package> — N DEX, M valid
+④ Tap the green button to export DEX files to /sdcard/Download
+[📦 Export all]
+[DEX file list + validation results]
+[‹ Back to app list]
 ```
 
-### 2. CLI 命令行方式
+### 2. CLI Binary
 
-#### 准备工作
+#### Prepare
 ```bash
-# 推送二进制到设备
+# Push the binary to device
 adb push bin/arm64/dexripper-scan /data/local/tmp/
 adb shell chmod +x /data/local/tmp/dexripper-scan
 ```
 
-#### 执行扫描
+#### Scan
 ```bash
-# 扫描目标应用
+# Scan the target app (app must be running)
 adb shell su -c "/data/local/tmp/dexripper-scan com.example.app /data/local/tmp/output"
 
-# 查看输出
+# Check output
 adb shell ls -lh /data/local/tmp/output/
 
-# 拉取产物到本地
+# Pull results to local machine
 adb pull /data/local/tmp/output/ ./output/
 ```
 
-#### 输出格式
+#### Output Format
 ```
-dump_0000006fc1288000_OK.dex  5.8MB  ← 地址 + 校验状态
+dump_0000006fc1288000_OK.dex  5.8MB  ← address + validation status
 dump_0000006fc1856000_OK.dex  9.5MB
 dump_0000006fc21d3000_OK.dex  4.9MB
 ```
 
-`_OK` 表示六维校验通过，`_MISMATCH` 表示校验失败（可能是碎片数据）。
+`_OK` means the 6-dimension validation passed; `_MISMATCH` means validation failed (likely fragment data).
 
-### 3. Python CLI 方式
+### 3. Python CLI
 
-#### 安装依赖
+#### Install dependencies
 ```bash
 pip install frida frida-tools
 ```
 
-#### 扫描
+#### Scan
 ```bash
-# 扫描目标应用（自动推送 dexripper-scan 到设备）
+# Scan the target app (auto-pushes dexripper-scan to device)
 python cli/main.py scan com.example.app -o ./output
 ```
 
-#### 校验
+#### Validate
 ```bash
-# 校验所有 DEX
+# Validate all DEX files
 python cli/main.py validate ./output/
 
-# 输出示例
+# Example output
 dump_0000006fc1288000_OK.dex: VALID (36.1MB, classes=1234)
 dump_0000006fc1856000_OK.dex: VALID (5.8MB, classes=567)
 ```
 
-#### 生成报告
+#### Generate report
 ```bash
-# HTML 报告
+# HTML report
 python cli/main.py report ./output/ --format html --output report.html
 
-# JSON 报告
+# JSON report
 python cli/main.py report ./output/ --format json --output report.json
 ```
 
-## 常见问题
+## FAQ
 
-### Q1: 扫描失败，提示 "exit 1"
-**原因**：目标进程不存在或已被杀死
+### Q1: Scan fails with "exit 1"
+**Cause**: target process does not exist or was killed.
 
-**解决**：
-- 确保目标应用已安装并可正常启动
-- App 会自动唤醒目标应用（monkey 冷启动），等待 6 秒后扫描
-- 如果仍然失败，手动启动目标应用后再扫描
+**Fix**:
+- Make sure the target app is installed and can launch
+- The app auto-wakes the target (monkey cold-start), then scans after 6 seconds
+- If it still fails, launch the target app manually and scan again
 
-### Q2: 扫描结果为 0 个 DEX
-**原因**：
-1. 未授予 root 权限
-2. 目标应用未运行
-3. 应用使用了特殊的加固方案
+### Q2: Scan returns 0 DEX files
+**Cause**:
+1. Root permission not granted
+2. Target app is not running
+3. The app uses a special packer scheme
 
-**解决**：
-- 检查 root 授权（KernelSU/SukiSU/Magisk 管理器）
-- 手动启动目标应用后再扫描
+**Fix**:
+- Check root grant (KernelSU/SukiSU/Magisk manager)
+- Launch the target app manually and scan again
 
-### Q3: 扫描结果中有 MISMATCH
-**原因**：堆扫描提取到碎片数据，不是完整的 DEX 文件
+### Q3: Scan results contain MISMATCH files
+**Cause**: heap scanning dumped fragment data, not complete DEX files.
 
-**解决**：
-- MISMATCH 的文件可以忽略，只使用 `_OK` 的产物
-- 六维校验会自动过滤假阳性
+**Fix**:
+- Ignore MISMATCH files; only use `_OK` artifacts
+- 6-dimension validation automatically filters false positives
 
-### Q4: 导出的 DEX 无法反编译
-**原因**：
-1. DEX 文件不完整（MISMATCH）
-2. 应用使用了代码混淆或虚拟化
+### Q4: Exported DEX files fail to decompile
+**Cause**:
+1. DEX file is incomplete (MISMATCH)
+2. The app uses code obfuscation or virtualization
 
-**解决**：
-- 只使用 `VALID` 的 DEX 文件
-- 尝试使用 jadx 或 dex2jar 反编译
-- 对于虚拟化保护，需要配合其他工具（如 D8、dex2jar）
+**Fix**:
+- Only use `VALID` DEX files
+- Try jadx or dex2jar for decompilation
+- For virtualized protection, combine with other tools (D8, dex2jar)
 
-### Q5: App 闪退或无响应
-**原因**：
-1. 设备不支持（非 ARM64）
-2. Android 版本过低（< 8.0）
-3. root 权限问题
+### Q5: App crashes or hangs
+**Cause**:
+1. Unsupported device (not ARM64)
+2. Android version too low (< 8.0)
+3. Root permission issue
 
-**解决**：
-- 检查设备架构（`adb shell getprop ro.product.cpu.abi`）
-- 检查 Android 版本（`adb shell getprop ro.build.version.sdk`）
-- 重新安装 App 并授予 root 权限
+**Fix**:
+- Check device ABI (`adb shell getprop ro.product.cpu.abi`)
+- Check Android version (`adb shell getprop ro.build.version.sdk`)
+- Reinstall the app and grant root permission
 
-## 技术细节
+## Technical Details
 
-### 内存扫描原理
-1. 读取 `/proc/<pid>/maps` 获取所有内存区域
-2. 过滤系统区域（/system、/apex、/data 不含包名的区域）
-3. 对每个区域扫描 `dex\n` 魔数
-4. 找到魔数后读取完整 DEX 文件（根据 file_size 字段）
-5. 六维校验验证 DEX 完整性
+### Memory Scanning Principle
+1. Parse `/proc/<pid>/maps` to enumerate all memory regions
+2. Filter out system regions (/system, /apex, /data without the package name)
+3. Scan each region for the `dex\n` magic
+4. Once found, read the complete DEX file (according to its file_size field)
+5. Verify DEX integrity with 6-dimension validation
 
-### 堆内存扫描
-加固壳解密的业务 DEX 通常分配在 scudo 堆（大对象堆，mmap 实现）。DexRipper 会扫描所有堆区域，包括：
-- scudo:primary（小对象堆）
-- scudo:secondary（大对象堆，加固壳 DEX 常驻此处）
-- jemalloc 堆
-- libc malloc 堆
+### Heap Memory Coverage
+Business DEX decrypted by packers usually lives in the scudo heap (large-object heap, mmap-based). DexRipper scans all heap regions, including:
+- scudo:primary (small-object heap)
+- scudo:secondary (large-object heap — where packer DEX resides)
+- jemalloc heap
+- libc malloc heap
 
-### 六维校验
-1. **魔数**：`dex\n` + 3 位版本号（035/037/039）+ 0
-2. **header_size**：必须为 0x70（112 字节）
-3. **endian_tag**：必须为 0x12345678（小端序）
-4. **file_size**：实际文件大小必须与声明一致
-5. **Adler-32**：校验和必须匹配
-6. **class_defs**：class_defs_size 必须 > 0
+### 6-Dimension Validation
+1. **Magic**: `dex\n` + 3-digit version (035/037/039) + `\0`
+2. **header_size**: must be 0x70 (112 bytes)
+3. **endian_tag**: must be 0x12345678 (little-endian)
+4. **file_size**: actual size must match the declared size
+5. **Adler-32**: checksum must match
+6. **class_defs**: class_defs_size must be > 0
 
-## 性能参考
+## Performance Reference
 
-| 指标 | 数值 |
-|------|------|
-| 扫描速度 | ~100MB/s |
-| 内存占用 | ~5MB |
-| 单次扫描耗时 | 10-30 秒（视应用内存大小） |
+| Metric | Value |
+|--------|-------|
+| Scan speed | ~100MB/s |
+| Memory footprint | ~5MB |
+| Single scan duration | 10-30s (depends on app memory size) |
 
-## 安全说明
+## Security
 
-- DexRipper 不会修改目标进程的任何数据
-- 只读取 `/proc/<pid>/maps` 和 `/proc/<pid>/mem`
-- 使用 `process_vm_readv` 系统调用（需要 root）
-- 不会注入任何代码或 hook
+- DexRipper never modifies any data of the target process
+- Only reads `/proc/<pid>/maps` and `/proc/<pid>/mem`
+- Uses the `process_vm_readv` syscall (requires root)
+- No injection, no hooks
 
-## 许可证
+## License
 
-本项目仅供学习和研究使用，请勿用于非法用途。使用本工具造成的任何损失由用户自行承担。
+For educational and research purposes only. Do not use for any illegal purpose. Any loss caused by using this tool is borne by the user.

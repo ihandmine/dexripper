@@ -87,14 +87,6 @@ python cli/main.py report ./output/ --format html
 4. **Heap coverage**: scans scudo heap regions where packer-decrypted DEX usually resides
 5. **Deduplication**: SHA-256 based dedup to avoid duplicate dumps
 
-## Comparison
-
-| Tool | Injection | Heap scan | Validation | On-device |
-|------|-----------|-----------|------------|-----------|
-| DexRipper | None | ✓ | 6-dim | ✓ (APK) |
-| dexhound | None | ✗ | Basic | ✗ |
-| eBPFDexDumper | eBPF | ✓ | None | ✗ |
-| FART | Injection | ✗ | None | ✗ |
 
 ## Notes
 
