@@ -1,0 +1,29 @@
+# 核心 C 源码（不公开）
+core/
+lib/
+
+# 构建产物
+apk/build/
+apk/src/
+apk/tools/
+output/
+__pycache__/
+*.pyc
+*.pyo
+*.class
+*.jar
+
+# IDE
+.idea/
+.vscode/
+*.iml
+.DS_Store
+
+# 测试产物
+tests/output/
+tests/*.dex
+
+# 临时文件
+*.log
+*.tmp
+*.bak
