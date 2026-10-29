@@ -6,6 +6,8 @@ DexRipper is a memory-scanning based Android DEX unpacker. It extracts DEX files
 
 📖 **[Detailed Usage Guide](docs/usage.md)** — FAQ, technical details, troubleshooting
 
+<img src="screenshot.png" width="320" alt="DexRipper scan result">
+
 ## Features
 
 - **Non-invasive scanning**: reads `/proc/<pid>/maps` and `/proc/<pid>/mem` only; no injection, no hooks

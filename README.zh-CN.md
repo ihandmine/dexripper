@@ -6,6 +6,8 @@ DexRipper 是一款基于内存扫描的 Android 无注入脱壳工具，支持�
 
 📖 **[详细使用指南](docs/usage.zh-CN.md)** —— 含 FAQ、技术原理、常见问题排查
 
+<img src="screenshot.png" width="320" alt="DexRipper scan result">
+
 ## 特性
 
 - **无注入扫描**：不向目标进程注入任何代码，通过 `/proc/<pid>/maps` 和 `process_vm_readv` 读取内存
